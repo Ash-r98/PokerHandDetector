@@ -29,6 +29,7 @@ def subtractlists(biglist, smalllist): # Remove all elements in small list from 
     return finallist
 
 def detectpokerhand(hand): # Parameter of 7 cards list
+    # Return: type of hand, cards in the scoring hand, remaining cards
     handtype = 'high card'
     tophand = []
     remainingcards = []
@@ -52,11 +53,15 @@ def detectpokerhand(hand): # Parameter of 7 cards list
 
     suitlists = [sorthand(spadelist), sorthand(heartlist), sorthand(clublist), sorthand(diamondlist)]
     sortedcardlist = sorthand(suitlists[0] + suitlists[1] + suitlists[2] + suitlists[3])
+    cardnumbers = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    for i in range(len(sortedcardlist)):
+        cardnumbers[cardvalues.index(sortedcardlist[i][0])] += 1
 
     # Flush detection
     for i in range(len(suitlists)):
         if len(suitlists[i]) >= 5:
             tophand = suitlists[i][-5:]
+            print(tophand)
             straightflushflag = True
             for j in range(1, len(tophand)):
                 if cardvalues.index(tophand[j][0]) - cardvalues.index(tophand[j-1][0]) != 1:
@@ -68,16 +73,125 @@ def detectpokerhand(hand): # Parameter of 7 cards list
                     handtype = 'royal flush'
                 else:
                     handtype = 'straight flush'
-            remainingcards = subtractlists(sortedcardlist, tophand)
-            return handtype, tophand, remainingcards
+                remainingcards = subtractlists(sortedcardlist, tophand)
+                return handtype, tophand, remainingcards # Royal/straight flush are top hands so will instantly return
 
     # Non-flush hands
-    for i in range(sortedcardlist):
-        pass
+    toppairid = None
+    secondpairid = None
+    toptripleid = None
+    flushflag = False
+    if handtype == 'flush':
+        flushflag = True
+
+    for i in range(len(cardnumbers)):
+        if cardnumbers[i] == 4:
+            handtype = 'four of a kind'
+            tophand = []
+            remainingcards = []
+            for card in sortedcardlist:
+                if card[0] == cardvalues[i]:
+                    tophand.append(card)
+                else:
+                    remainingcards.append(card)
+            return handtype, tophand, remainingcards # Past flush checks, so 4 of a kind is always highest with no flush
+        elif cardnumbers[i] == 3:
+            toptripleid = i
+        elif cardnumbers[i] == 2:
+            if toppairid != None: # If there is already a pair
+                secondpairid = toppairid
+            toppairid = i # Will always be overwritten by higher pair
+
+    # Flush
+    if (toptripleid is None or toppairid is None) and flushflag:
+        handtype = 'flush'
+        print(tophand)
+        remainingcards = subtractlists(sortedcardlist, tophand)
+        return handtype, tophand, remainingcards  # Top hand and remaining cards are already set
+    # Full house
+    elif toptripleid is not None and toppairid is not None:
+        handtype = 'full house'
+        tophand = []
+        remainingcards = []
+        for card in sortedcardlist:
+            if card[0] == cardvalues[toptripleid] or card[0] == cardvalues[toppairid]:
+                tophand.append(card)
+            else:
+                remainingcards.append(card)
+        return handtype, tophand, remainingcards  # Full house is next highest hand so will return here
+
+    tophand = []
+    remainingcards = []
+
+    # Straight detection
+    straightcounter = 0
+    for i in range(0, len(sortedcardlist)-1):
+        if cardvalues.index(sortedcardlist[i+1][0]) - cardvalues.index(sortedcardlist[i][0]) == 1:
+            straightcounter += 1
+            tophand.append(sortedcardlist[i+1])
+        elif straightcounter < 5: # Only reset if previous detection wasn't a full straight
+            straightcounter = 1
+            tophand = [sortedcardlist[i+1]]
+
+    if straightcounter < 5 and sortedcardlist[-1][0] == 'a': # Possible wraparound straight
+        for i in range(5-straightcounter):
+            if sortedcardlist[i][0] == cardvalues[i]: # If first cards are, 2, 3, 4, etc
+                straightcounter += 1
+                tophand.append(sortedcardlist[i])
+
+    if straightcounter > 5: # Cut the list to top 5 cards
+        if 'a' in tophand and tophand[-1] != 'a': # If ace in hand but not final then it is a wraparound straight
+            tophand = tophand[:5] # Right end is cut off for wraparound
+        else:
+            tophand = tophand[-5:] # Left end is cut off for normal straight
+        straightcounter = 5
+
+    if straightcounter == 5:
+        handtype = 'straight'
+        remainingcards = subtractlists(sortedcardlist, tophand)
+        return handtype, tophand, remainingcards
+
+
+    # Final hands
+
+    tophand = []
+    remainingcards = []
+
+    # Three of a kind
+    if toptripleid != None:
+        handtype = 'three of a kind'
+        for card in sortedcardlist:
+            if card[0] == cardvalues[toptripleid]:
+                tophand.append(card)
+            else:
+                remainingcards.append(card)
+    # Two pair
+    elif secondpairid != None:
+        handtype = 'two pair'
+        for card in sortedcardlist:
+            if card[0] == cardvalues[toppairid] or card[0] == cardvalues[secondpairid]:
+                tophand.append(card)
+            else:
+                remainingcards.append(card)
+    # Pair
+    elif toppairid != None:
+        handtype = 'pair'
+        for card in sortedcardlist:
+            if card[0] == cardvalues[toppairid]:
+                tophand.append(card)
+            else:
+                remainingcards.append(card)
+    # High card
+    else:
+        handtype = 'high card'
+        tophand.append(sortedcardlist[-1])
+        for i in range(len(sortedcardlist)-1):
+            remainingcards.append(sortedcardlist[i])
+
+    return handtype, tophand, remainingcards
 
 
 
-
-testhand = [['a', 'spade'], ['3', 'spade'], ['7', 'spade'], ['2', 'spade'], ['7', 'spade'], ['7', 'spade']]
+testhand = [['a', 'spade'], ['2', 'spade'], ['7', 'spade'], ['j', 'spade'], ['8', 'spade'], ['q', 'spade'], ['k', 'spade']]
 print(testhand)
 print(detectpokerhand(testhand))
