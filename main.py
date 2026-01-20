@@ -28,6 +28,36 @@ def subtractlists(biglist, smalllist): # Remove all elements in small list from 
             finallist.append(biglist[i])
     return finallist
 
+def straightdetect(sortedcardlist):
+    tophand = [sortedcardlist[0]]
+    straightcounter = 1
+    for i in range(1, len(sortedcardlist)):
+        if cardvalues.index(sortedcardlist[i][0]) - cardvalues.index(sortedcardlist[i - 1][0]) == 1:
+            straightcounter += 1
+            tophand.append(sortedcardlist[i])
+        elif straightcounter < 5:  # Only reset if previous detection wasn't a full straight
+            straightcounter = 1
+            tophand = [sortedcardlist[i]]
+
+    if straightcounter < 5 and sortedcardlist[-1][0] == 'a':  # Possible wraparound straight
+        for i in range(5 - straightcounter):
+            if sortedcardlist[i][0] == cardvalues[i]:  # If first cards are, 2, 3, 4, etc
+                straightcounter += 1
+                tophand.append(sortedcardlist[i])
+
+    if straightcounter > 5:  # Cut the list to top 5 cards
+        if 'a' in tophand and tophand[-1] != 'a':  # If ace in hand but not final then it is a wraparound straight
+            tophand = tophand[:5]  # Right end is cut off for wraparound
+        else:
+            tophand = tophand[-5:]  # Left end is cut off for normal straight
+        straightcounter = 5
+
+    print(straightcounter)
+    if straightcounter == 5:
+        return True, tophand
+    else:
+        return False, []
+
 def detectpokerhand(hand): # Parameter of 7 cards list
     # Return: type of hand, cards in the scoring hand, remaining cards
     handtype = 'high card'
@@ -60,15 +90,12 @@ def detectpokerhand(hand): # Parameter of 7 cards list
     # Flush detection
     for i in range(len(suitlists)):
         if len(suitlists[i]) >= 5:
-            tophand = suitlists[i][-5:]
-            print(tophand)
-            straightflushflag = True
-            for j in range(1, len(tophand)):
-                if cardvalues.index(tophand[j][0]) - cardvalues.index(tophand[j-1][0]) != 1:
-                    straightflushflag = False
-            if not straightflushflag:
+            # Straight detection
+            straightflushresult = straightdetect(suitlists[i])
+            if not straightflushresult[0]:
                 handtype = 'flush'
             else:
+                tophand = straightflushresult[1]
                 if tophand[-1][0] == 'a':
                     handtype = 'royal flush'
                 else:
@@ -124,31 +151,11 @@ def detectpokerhand(hand): # Parameter of 7 cards list
     remainingcards = []
 
     # Straight detection
-    straightcounter = 0
-    for i in range(0, len(sortedcardlist)-1):
-        if cardvalues.index(sortedcardlist[i+1][0]) - cardvalues.index(sortedcardlist[i][0]) == 1:
-            straightcounter += 1
-            tophand.append(sortedcardlist[i+1])
-        elif straightcounter < 5: # Only reset if previous detection wasn't a full straight
-            straightcounter = 1
-            tophand = [sortedcardlist[i+1]]
-
-    if straightcounter < 5 and sortedcardlist[-1][0] == 'a': # Possible wraparound straight
-        for i in range(5-straightcounter):
-            if sortedcardlist[i][0] == cardvalues[i]: # If first cards are, 2, 3, 4, etc
-                straightcounter += 1
-                tophand.append(sortedcardlist[i])
-
-    if straightcounter > 5: # Cut the list to top 5 cards
-        if 'a' in tophand and tophand[-1] != 'a': # If ace in hand but not final then it is a wraparound straight
-            tophand = tophand[:5] # Right end is cut off for wraparound
-        else:
-            tophand = tophand[-5:] # Left end is cut off for normal straight
-        straightcounter = 5
-
-    if straightcounter == 5:
+    straightresult = straightdetect(sortedcardlist)
+    if straightresult[0]:
         handtype = 'straight'
-        remainingcards = subtractlists(sortedcardlist, tophand)
+        tophand = straightresult[1]
+        remainingcard = subtractlists(sortedcardlist, tophand)
         return handtype, tophand, remainingcards
 
 
