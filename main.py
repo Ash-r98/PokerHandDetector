@@ -1,7 +1,7 @@
 cardvalues = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'j', 'q', 'k', 'a']
 suits = ['spade', 'heart', 'club', 'diamond']
 handtypes = ['high card', 'pair', 'two pair' ,'three of a kind', 'straight', 'flush', 'full house', 'four of a kind', 'straight flush', 'royal flush']
-cardexample = ['a', 'spade']
+#cardexample = ['a', 'spade']
 
 def sorthand(hand): # Sorts hand by card value, lowest to highest
     sortedhand = []
@@ -199,6 +199,6 @@ def detectpokerhand(hand): # Parameter of 7 cards list
 
 
 
-testhand = [['a', 'spade'], ['2', 'spade'], ['7', 'spade'], ['j', 'spade'], ['8', 'spade'], ['q', 'spade'], ['k', 'spade']]
-print(testhand)
-print(detectpokerhand(testhand))
+#testhand = [['a', 'spade'], ['2', 'spade'], ['7', 'spade'], ['j', 'spade'], ['8', 'spade'], ['q', 'spade'], ['k', 'spade']]
+#print(testhand)
+#print(detectpokerhand(testhand))
