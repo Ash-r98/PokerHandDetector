@@ -17,6 +17,7 @@ def sorthand(hand): # Sorts hand by card value, lowest to highest
     return sortedhand
 
 def subtractlists(biglist, smalllist): # Remove all elements in small list from big list
+    smalllist = smalllist[:]
     finallist = []
     for i in range(len(biglist)):
         indexflag = True
@@ -52,7 +53,6 @@ def straightdetect(sortedcardlist):
             tophand = tophand[-5:]  # Left end is cut off for normal straight
         straightcounter = 5
 
-    print(straightcounter)
     if straightcounter == 5:
         return True, tophand
     else:
